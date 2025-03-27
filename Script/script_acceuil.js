@@ -1,5 +1,4 @@
 let boutons = document.getElementsByClassName("button");
-// let deconnexion=document.getElementById("button_log_out");
 for (let i = 0; i < boutons.length; i++) {
     boutons[i].addEventListener("mouseover", function() {
         boutons[i].style.backgroundColor = "rgb(186, 218, 213)"; 
