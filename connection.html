@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <title>StudentTrade</title>
+        <link rel="stylesheet" href="./projet_style.css">   <!-- introduction du code CSS  -->
+        <link rel="icon" href="logo.webp">    <!-- le logo sera present sur toutes les pages-->
+        
+    </head>
+    <body>
+        <!-- <img src="logo.webp" width=70px height=70px title="StudentTrade"> --> <!-- logo du site-->
+
+        <blockquote title="Plateforme étudiante d'échange, de vente et d'achat d'articles"></blockquote><h1 id="centrer"><center><br>StudentTrade</br></center></h1></blockquote>
+    <center><div class="box_formulaire">
+            <h2>Bienvenue sur notre site</h2>
+    
+            <!-- Boutons pour basculer entre Connexion et Inscription -->
+            <div class="buttons_connect_inscript">
+                <button onclick="showForm('login')" >Connexion</button>
+                <button onclick="showForm('register')">Inscription</button>
+            </div>
+         <!-- Formulaire de connexion -->
+         <form id="login-form" class="form">
+            <h3>Connexion</h3>
+            <label>Email :</label>
+            <input type="email" placeholder="Entrez votre email" required>
+            
+            <label>Mot de passe :</label>
+            <input type="password" placeholder="Entrez votre mot de passe" required>
+            
+            <button type="submit">Se connecter</button>
+        </form>
+
+        <!-- Formulaire d'inscription -->
+        <form id="register-form" class="form hidden">
+            <h3>Inscription</h3>
+            <label>User Name :</label>
+            <input type="text" placeholder="Entrez votre nom utilisateur" required>
+
+            <label>Email :</label>
+            <input type="email" placeholder="Entrez votre adresse email" required>
+            <!-- <input type="" -->           
+            <label>Mot de passe :</label>
+            <input type="password" placeholder="Créez un mot de passe" required>
+            
+            <button type="submit">S'inscrire</button>
+        </form>
+    </div></center>
+    <script src="action.js"></script>
+    </body>
+</html>
