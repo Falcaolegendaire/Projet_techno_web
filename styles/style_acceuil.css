@@ -1,34 +1,125 @@
-body{
-    background-image: url("../Images/background_2.webp");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat; 
-    height: 100vh; 
+/* tout ce qui est header est pour le haut de page */
+header {
     margin: 0;
-}
-.taskbar{
-    background: rgb(234, 240, 232,0.5);
-    height: 65px;;
+    height: auto;
+    padding: 20px 15px;
     display: flex;
-    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-top: 5px;
+    transition: cubic-bezier(0.165, 0.84, 0.44, 1);
+    
+  }
+  
+input[type="button"],input[type="submit"] {
+    padding: 10px;
+  }
+  
 
+  header [type=submit]{   
+    margin-left: -5px;   
+    border-radius: 0 10px 10px 0;   
+    text-transform: uppercase; 
+  }
+  
+.taskbar {
+    display: flex;
+    justify-content: center; 
+    align-items: center; 
+    margin-left: -5px;   
+    border-radius: 0 10px 10px 0;   
+    text-transform: uppercase; 
+  }
+  .taskbar img {
+    height: 120px;
+    width: auto; 
 }
-/* #button_offre{
-    background-color: blue;
-    cursor: move;
-} */
+  
+.search-bar {
+    display: flex;
+    margin-left: 10px;
+    gap: 5px;
+    padding: 10px;
+  }
+#button_rechercher:hover{
+    background-color: black; 
+    transition: all 0.5s ease;
+}
+#button_rechercher{
+    background-color:rgba(230, 174, 20, 0.904) ;
+    color: white;
+}
 .button{
-    /* background-color: rgb(234, 240, 232);
-    font-size: 15px;  /* Augmente la taille du texte */
+    background-color: rgba(230, 174, 20, 0.904);
+     font-size: 15px; 
      padding: 20px 50px; 
-     margin-right: 20px; 
-    background-color: rgb(234, 240, 232);
-    color: black;
+     margin-right: 2px; 
+    color: white;
     cursor: pointer;
     border-radius: 100px;
+    transition: cubic-bezier(0.165, 0.84, 0.44, 1)
 }
-.taskbar img {
-    height: 65px;
-    width: auto; 
-    margin-right: 8px;
-}
+
+nav {
+    text-align: center;
+    color: black;
+    display: flex;
+    justify-content: space-around;
+    overflow: hidden;
+    width: 100%;
+    margin-top: 2rem;
+  }
+  .icon-right {
+    flex: auto;
+  }  
+
+
+  .bas_de_page {
+    display: flex;
+    justify-content: center;
+    gap: 150px; 
+    padding: 20px 0;
+    background-color: white; 
+  }
+  
+  .image_bas_de_page {
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .image_bas_de_page img {
+    width: 80px; 
+    height: auto;
+  }
+  
+ 
+  /* tout ce qui est footer est pour le bas de page  */
+  footer {
+    padding: 10px 20px;
+    background-color: rgba(230, 174, 20, 0.904);
+    margin-top: 0; 
+  }
+  
+  .footer_info {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    text-align: start;
+  
+    width: auto;
+    height: auto;
+  }
+  
+  .footer_info_title {
+    font-size: 1.1em;
+    font-weight: 700;
+    padding: 15px 0;
+  }
+  
+  footer li {
+    padding: 10px 0;
+  }
+

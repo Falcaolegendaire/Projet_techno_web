@@ -1,25 +1,114 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="./Images/logo.webp">
-    <link rel="stylesheet" href="./styles/style_offre.css"> 
-    <title>StudentTrade</title>
-</head>
-<body>
-    <div class="taskbar">
+    <head>
+        <title>StudentTrade</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" href="./Images/test_logo.png">    <!-- le logo sera present sur toutes les pages-->
+        <link rel="stylesheet" href="./styles/style_acceuil.css">
+
+        
+    </head>
+    <body>
+        <header class="taskbar">
             <a href="./acceuil.html" target="_parent">
-                <img src="./Images/logo.webp" width=50px height=70px title="revenir à la page d'acceuil" alt=" Image non chargé">
+                <img src="./Images/test_logo.png" width=50px height=70px title="revenir à la page d'acceuil" alt=" Image non chargé">
             </a>
-             <button class="button" id="button_offre">Offres</button>
-             <button class="button" id="button_ajouter_offre">Ajouter une offre</button>
-             <button class="button" id="button_suggestion">Suggestions</button>
-             <button class="button" id="button_notification">Notification</button>
-             <button class="button" id="button_contact">Contact</button>
-             <button class="button" id="button_aide">Aide</button>
-             <button class="button" id="button_profil">Profil</button>
-             <button class="button" id="button_log_out">Log out</button>
+             <form class="search-bar">
+                <input type="text" name="search" placeholder=" search" />
+                <input type="submit" value="Rechercher" id="button_rechercher"/>
+              </form>
+              <a href="./aide.html">
+                <img src="./Images/panier.png" width="50" height="70" alt="Icone utilisateur" class="icon-right">
+              </a>
+        </header>
+            <div>
+                <nav>
+                    <button class="button" id="button_offre">Offres</button>
+                    <button class="button" id="button_ajouter_offre">Ajouter une offre</button>
+                    <button class="button" id="button_suggestion">Suggestions</button>
+                    <button class="button" id="button_notification">Notification</button>
+                    <button class="button" id="button_contact">Contact</button>
+                    <button class="button" id="button_aide">Aide</button>
+                    <button class="button" id="button_profil">Profil</button>
+                    <button class="button" id="button_log_out">Log out</button>
+                </nav> 
             </div>
-           <script src="./Script/script_acceuil.js"></script>
-</body>
-</html>
+
+            <main>
+                <!--  le code du milieu de la -->
+            <section>
+                <!--  exemple pour simuler la page -->
+                <p> hello</p>
+                <p> hello</p>
+                <p> hello</p>
+                <p> hello</p>
+                <p> hello</p>
+                <p> hello</p>
+            </section>
+            <section class="bas_de_page">
+              <figure class="image_bas_de_page">
+                <div class="reassurance__img">
+                  <img
+                    src="./Images/004-padlock.png"
+                    alt="Site Securisé"
+                  />
+                </div>
+      
+                <figcaption>Site Sécurisé</figcaption>
+              </figure>
+              <figure class="image_bas_de_page">
+                <div class=>
+                  <img
+                    src="./Images/001-parcel.png"
+                    alt="Service de livraison"/>
+                </div>
+      
+                <figcaption>
+                  service de Livraison disponible 24H/24
+                </figcaption>
+              </figure>
+              <figure class="image_bas_de_page">
+                <div>
+                  <img src="./Images/002-badge.png" alt="Qualité Garantie" />
+                </div>
+      
+                <figcaption>Qualité Garantie</figcaption>
+              </figure>
+              <figure class="image_bas_de_page">
+                <div class="reassurance__img">
+                  <img
+                    src="./Images/003-support.png"
+                    alt="Notre équipe à votre écoute"/>
+                </div>
+      
+                <figcaption >
+                  Notre équipe à votre écoute
+                </figcaption>
+              </figure>
+            </section>
+            
+            </main>
+            <footer>
+      <div class="footer_info">
+        <div>
+          <h3 class="footer_info_title">A propos</h3>
+          <ul>
+            <li>Fonctionnement du site</li>
+            <li>Conditions générales de vente</li>
+            <li>Données et Confidentialité</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="footer_info_title">Assistance</h3>
+          <ul>
+            <li>Centre D'aide</li>
+            <li>Nous Contacter</li>
+          </ul>
+        </div>
+      </div>
+    </footer>
+
+           <script src="./Script/script_acceuil.js"></script>    
+    </body>
+</html>  

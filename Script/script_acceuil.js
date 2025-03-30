@@ -53,7 +53,7 @@ bouton_logout.addEventListener('click',function(){
 
 for (let i = 0; i < boutons.length; i++) {
     boutons[i].addEventListener("mouseover", function() {
-        boutons[i].style.backgroundColor = "rgb(186, 218, 213)"; 
+        boutons[i].style.backgroundColor = "black"; 
     });
 
     boutons[i].addEventListener("mouseout", function() {
