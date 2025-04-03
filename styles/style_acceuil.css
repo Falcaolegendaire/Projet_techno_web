@@ -19,17 +19,18 @@ header {
     margin-top: 5px;
     transition: cubic-bezier(0.165, 0.84, 0.44, 1);
     
+    
   }
   
 input[type="button"],input[type="submit"] {
     padding: 10px;
   }
-  
 
   header input[type=submit]{   
     margin-left: -5px;   
     border-radius: 0 10px 10px 0;   
-    text-transform: uppercase;
+    text-transform: uppercase; 
+    
   }
   
 .taskbar {
@@ -39,6 +40,7 @@ input[type="button"],input[type="submit"] {
     margin-left: -5px;   
     border-radius: 0 10px 10px 0;   
     text-transform: uppercase; 
+    
   }
   .taskbar img {
     height: 120px;
@@ -55,11 +57,13 @@ input[type="button"],input[type="submit"] {
     margin-left: 10px;
     gap: 5px;
     padding: 10px;
+    
   }
 #button_rechercher:hover{
     background-color: black; 
     transition: all 0.5s ease;
-    transform: scale(1.2);
+    transform: scale(0.8);
+    transition: all 0.5s ease;
 }
 #button_rechercher{
     background-color:rgba(230, 174, 20, 0.904) ;
@@ -79,6 +83,11 @@ input[type="button"],input[type="submit"] {
    transform: scale(0.8);
    width: auto;
    height: auto;
+}
+
+.button:hover{
+  transform: scale(0.8);
+transition: all 0.5s ease;
 }
 
 nav {
@@ -143,4 +152,3 @@ nav {
   footer li {
     padding: 10px 0;
   }
-
