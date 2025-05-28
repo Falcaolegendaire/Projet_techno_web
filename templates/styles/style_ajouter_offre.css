@@ -1,0 +1,34 @@
+body{
+ /*  mettre son image de fon ici */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat; 
+    height: 100vh; 
+    margin: 0;
+}
+.taskbar{
+    background: rgb(234, 240, 232,0.5);
+    height: 65px;;
+    display: flex;
+    align-items: center;
+
+}
+/* #button_offre{
+    background-color: blue;
+    cursor: move;
+} */
+.button{
+    /* background-color: rgb(234, 240, 232);
+    font-size: 15px;  /* Augmente la taille du texte */
+     padding: 20px 50px; 
+     margin-right: 20px; 
+    background-color: rgb(234, 240, 232);
+    color: black;
+    cursor: pointer;
+    border-radius: 100px;
+}
+.taskbar img {
+    height: 65px;
+    width: auto; 
+    margin-right: 8px;
+}
