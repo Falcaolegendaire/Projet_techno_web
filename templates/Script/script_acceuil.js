@@ -16,8 +16,9 @@ bouton_offre.addEventListener('click',function(){
         redirect_to_another_page("/templates/offre.html","_parent");
 });
 
-bouton_ajout_offre.addEventListener('click',function(){
+bouton_ajout_offre.addEventListener('click', function(){
     redirect_to_another_page("/templates/ajouter_offre.html","_parent");
+    
 });
 
 bouton_suggestion.addEventListener('click',function(){

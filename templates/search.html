@@ -5,7 +5,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="icon" href="/templates/Images/logo.webp">    <!-- le logo sera present sur toutes les pages-->
-        <link rel="stylesheet" href="/templates/styles/style_acceuil.css">
+        <link rel="stylesheet" href="/templates/styles/style_search.css">
 
 
     </head>
@@ -38,19 +38,35 @@
             <main>
                 <!--  le code du milieu de la -->
             <section>
-                <!--  exemple pour simuler la page -->      
-                <br><br><br>
-                  <center><img src="/templates/Images/background.png" style="border-radius: 70%;" width="400" height="400">
-                  <img src="/templates/Images/livre.jpeg" style="border-radius: 70%;" width="400" height="400"></center>
-                <p> hello</p>
-                <p> hello</p>
-                <p> hello</p>
-                <p> hello</p>
-                <p> hello</p>
-                <p> hello</p>
-                <p> hello</p>
-                <p> hello</p>
-                <p> hello</p>
+              
+  <center><strong><h2>Résultats pour "{{ recherche }}"</h2></strong></center>
+
+  {% if resultats %}
+  <div class="results-container">
+    {% for produit,utilisateur in resultats %}
+      <div class="card">
+        <h3><strong>{{ produit.name_item }}</strong></h3>
+        <img class="image" src="{{ produit.image_item }}" alt="{{ produit.name_item }}">
+        <p><strong>Prix :</strong> {{ produit.price_item }} €</p>
+        <p><strong>Quantité :</strong> {{ produit.quantity_item }}</p>
+        <p><strong>Description :</strong>{{ produit.description }}</p>
+        <p><strong> Publié par :</strong> {{ utilisateur.username }}</p>
+         <form method="post" action="/contact_seller">
+            <input type="hidden" name="email_vendeur" value="{{ utilisateur.email }}">
+            <input type="hidden" name="produit" value="{{ produit.name_item }}">
+            <input type="hidden" name="nom_vendeur" value="{{ utilisateur.username }}">
+            <label for="message"><strong>Envoyer un message au vendeur :</strong></label>
+            <textarea name="message" placeholder="Écrivez votre message ici..." required></textarea>
+            <button type="submit" class="button">Envoyer</button>
+          </form>
+      </div>
+    {% endfor %}
+    </div>
+  {% else %}
+    <p>Aucun résultat trouvé.</p>
+  {% endif %}
+
+
             </section>
             <section class="bas_de_page">
               <figure class="image_bas_de_page">

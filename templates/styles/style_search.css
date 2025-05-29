@@ -153,89 +153,65 @@ nav {
     padding: 10px 0;
   }
 
-.taskbar{
-    background: white;
-    height: 65px;;
-    display: flex;
-    align-items: center;
+   .results-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
 
-}
-/* #button_offre{
-    background-color: blue;
-    cursor: move;
-} */
-.button{
-    /* background-color: rgb(234, 240, 232);
-    font-size: 15px;  /* Augmente la taille du texte */
-     padding: 20px 50px; 
-     margin-right: 20px; 
-    background-color: rgba(230, 174, 20, 0.904);
-    color: white;
-    cursor: pointer;
-    border-radius: 100px;
-}
-.taskbar img {
-    height: 65px;
-    width: auto; 
-    margin-right: 8px;
+    .card {
+      background-color: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px black;
+      padding: 1rem;
+      transition: transform 0.2s ease;
+    }
+textarea {
+  resize: vertical;
+  min-height: 80px;
+  padding: 1rem;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-family: "Segoe UI", sans-serif;
+  background-color: #fafafa;
+  transition: border 0.3s, box-shadow 0.3s;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  outline: none;
 }
 
-/*  faire le css du formulaire d'ajout */
- .container {
-            padding: 35px;
-            border-radius: 40px;
-            box-shadow: 0 2px 10px white;
-            width: 1400px;
-            background-color: rgba(230, 174, 20, 0.904);
-            margin-top: 10px;
-            
-           
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 25px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: bla;
-        }
-        input[type="text"],
-        input[type="number"],
-        input[type="email"],
-        textarea {
-            width: calc(100% - 20px);
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        input[type="file"] {
-            padding: 8px 0;
-        }
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-        #form {
-            background-color: black;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 18px;
-            width: 100%;
-          
-        }
-        #form:hover {
-            /* background-color: rgba(230, 174, 20, 0.904); */
-             transform: scale(0.9);
-              transition: all 0.5s ease;
-              
-        }
+textarea:focus {
+  border-color: black;
+  box-shadow: 0 0 0 3px rgba(230, 174, 20, 0.904);
+  background-color: #fff;
+}
+
+    .card:hover {
+      transform: scale(1.03);
+    }
+
+    .card h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.2rem;
+      color:  black;
+    }
+
+    .image {
+      max-width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      margin: 0.3rem 0;
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .card strong {
+      color: #000;
+    }
