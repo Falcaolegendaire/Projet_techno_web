@@ -5,9 +5,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="icon" href="/static/Images/test_logo.png">    <!-- le logo sera present sur toutes les pages-->
-        <link rel="stylesheet" href="/static/styles/style_acceuil.css">
+        <link rel="stylesheet" href="/static/styles/style_search.css">
 
-        
     </head>
     <body>
         <header class="taskbar">
@@ -38,12 +37,35 @@
             <main>
                 <!--  le code du milieu de la -->
             <section>
+              <center><strong><u><h1>ELECTRONIQUES</h1></u></strong></center>
                 <!--  exemple pour simuler la page -->
                 <br><br><br>
-                <br><br><br>
-                <center><img src="/static/Images/livre4.jpeg" style="border-radius: 10%;" width="400" height="400">
-                  <img src="/static/Images/livre3.jpeg" style="border-radius: 10%;" width="400" height="400">
-                  </center><br><br><br><center>
+            
+                <h2>Liste des Offres</h2>
+                <div class="results-container">
+                    {% for produit, utilisateur in produits %}
+                    <div class="card">
+                        {% if produit.image_item %}
+                            <a href="/produit/{{ produit.id_item }}" class="btn btn-info" title="voir detail" ><img class="image" src="/{{ produit.image_item }}" alt="Image de {{ produit.name_item }}"></a>
+                        {% else %}
+                            <img src="/default.jpg" alt="Pas d'image">
+                        {% endif %}
+                        <h3>{{ produit.name_item }}</h3>
+                        <p><strong>Prix :</strong> {{ produit.price_item }} €</p>
+                        <p><strong>Quantité :</strong> {{ produit.quantity_item }}</p>
+                        <p><strong>Catégorie :</strong> {{ produit.category_item }}</p>
+                        <p><strong>Publié par :</strong> {{ utilisateur.username }}</p>
+                        
+                        <div style="margin-top: 10px;">
+                             <form method="post" action="/panier/ajouter">
+                            <input type="hidden" name="produit_id" value="{{ produit.id_item }}">
+                            <button type="submit" class="button">Ajouter au panier</button>
+                        </form>
+                        </div>
+                    </div>
+
+                    {% endfor %}
+                </div>
                 <p> hello</p>
                 <p> hello</p>
                 <p> hello</p>

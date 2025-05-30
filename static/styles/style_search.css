@@ -1,0 +1,217 @@
+/* tout ce qui est header est pour le haut de page */
+body{
+  display: grid;
+  background-position-y: 10%;
+    background-size: cover;
+    background-position: center; 
+    background-repeat: no-repeat; 
+    height: 100vh; 
+    margin: 0;
+}
+
+header {
+    margin: 0;
+    height: auto;
+    padding: 20px 15px;
+    /* display: flex; */
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-top: 5px;
+    transition: cubic-bezier(0.165, 0.84, 0.44, 1);
+    
+    
+  }
+  
+input[type="button"],input[type="submit"] {
+    padding: 10px;
+  }
+
+  header input[type=submit]{   
+    margin-left: -5px;   
+    border-radius: 0 10px 10px 0;   
+    text-transform: uppercase; 
+    
+  }
+  
+.taskbar {
+    display: flex;
+    justify-content: center; 
+    align-items: center; 
+    margin-left: -5px;   
+    border-radius: 0 10px 10px 0;   
+    text-transform: uppercase; 
+    
+  }
+  .taskbar img {
+    height: 120px;
+    width: auto; 
+}
+
+.taskbar img:hover {
+  transition: all 0.5s ease;
+  transform: scale(0.8);
+}
+  
+.search-bar {
+    display: flex;
+    margin-left: 10px;
+    gap: 5px;
+    padding: 10px;
+    
+  }
+#button_rechercher:hover{
+    background-color: black; 
+    transition: all 0.5s ease;
+    transform: scale(0.8);
+    transition: all 0.5s ease;
+}
+#button_rechercher{
+    background-color:rgba(230, 174, 20, 0.904) ;
+    color: white;
+}
+.button{
+    background-color: rgba(230, 174, 20, 0.904);
+     font-size: 15px; 
+     padding: 20px 50px; 
+     margin-right: 2px; 
+    color: white;
+    cursor: pointer;
+    border-radius: 100px;
+}
+.button:hover{
+   transition: all 0.5s ease;
+   transform: scale(0.8);
+   width: auto;
+   height: auto;
+}
+
+.button:hover{
+  transform: scale(0.8);
+transition: all 0.5s ease;
+}
+
+nav {
+    text-align: center;
+    color: black;
+    display: flex;
+    justify-content: space-around;
+    overflow: hidden;
+    width: 100%;
+    margin-top: 2rem;
+  }
+  .panier {
+    flex: auto;
+  }  
+
+
+  .bas_de_page {
+    display: flex;
+    justify-content: center;
+    gap: 150px; 
+    padding: 20px 0;
+    background-color: white; 
+  }
+  
+  .image_bas_de_page {
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .image_bas_de_page img {
+    width: 80px; 
+    height: auto;
+  }
+  
+ 
+  /* tout ce qui est footer est pour le bas de page  */
+  footer {
+    padding: 10px 20px;
+    background-color: rgba(230, 174, 20, 0.904);
+    margin-top: 0; 
+  }
+  
+  .footer_info {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    text-align: start;
+  
+    width: auto;
+    height: auto;
+  }
+  
+  .footer_info_title {
+    font-size: 1.1em;
+    font-weight: 700;
+    padding: 15px 0;
+  }
+  
+  footer li {
+    padding: 10px 0;
+  }
+
+   .results-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px black;
+      padding: 1rem;
+      transition: transform 0.2s ease;
+    }
+textarea {
+  resize: vertical;
+  min-height: 80px;
+  padding: 1rem;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-family: "Segoe UI", sans-serif;
+  background-color: #fafafa;
+  transition: border 0.3s, box-shadow 0.3s;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  outline: none;
+}
+
+textarea:focus {
+  border-color: black;
+  box-shadow: 0 0 0 3px rgba(230, 174, 20, 0.904);
+  background-color: #fff;
+}
+
+    .card:hover {
+      transform: scale(1.03);
+    }
+
+    .card h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.2rem;
+      color:  black;
+    }
+
+    .image {
+      max-width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      margin: 0.3rem 0;
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .card strong {
+      color: #000;
+    }

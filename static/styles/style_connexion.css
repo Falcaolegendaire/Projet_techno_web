@@ -1,6 +1,6 @@
 body{
  
-    background-image: url("/templates/Images/img2.png"); 
+    background-image: url("/static/Images/img2.png"); 
     background-position-y: 10%;
     background-size: cover;
     background-position: center; 

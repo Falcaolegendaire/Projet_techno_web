@@ -22,3 +22,10 @@ class Produit(SQLModel, table=True):
         category_item:str=Field(default="autres", nullable=True)  # catégorie de l'article
         image_item: Optional[str] = Field(default=None, nullable=True)  # chemin local de l'image
 
+
+class Panier(SQLModel, table=True):
+    id_panier: Optional[int] = Field(default=None, primary_key=True)
+    id_current_user: int
+    id_item: Optional[int] = Field(default=None, foreign_key="produit.id_item")
+    quantite: int = 1
+

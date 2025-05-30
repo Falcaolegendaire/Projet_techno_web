@@ -4,22 +4,22 @@
         <title>StudentTrade</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="icon" href="/templates/Images/test_logo.png">    <!-- le logo sera present sur toutes les pages-->
-        <link rel="stylesheet" href="/templates/styles/style_offre.css">
+        <link rel="icon" href="/static/Images/test_logo.png">    <!-- le logo sera present sur toutes les pages-->
+        <link rel="stylesheet" href="/static/styles/style_offre.css">
 
         
     </head>
     <body>
         <header class="taskbar">
             <a href="/templates/acceuil.html" target="_parent">
-                <img src="/templates/Images/test_logo.png" width=50px height=70px title="revenir à la page d'acceuil" alt=" Image non chargé">
+                <img src="/static/Images/test_logo.png" width=50px height=70px title="revenir à la page d'acceuil" alt=" Image non chargé">
             </a>
-             <form class="search-bar" action="/search" method="GET" enctype="multipart/form-data" >
-                <input type="text" name="recherche" placeholder="search"/>
+               <form class="search-bar" action="/search" method="get" enctype="multipart/form-data">
+                <input type="text" name="recherche" placeholder=" search"  required />
                 <input type="submit" value="Rechercher" id="button_rechercher"/>
               </form>
-              <a href="/templates/aide.html">
-                <img src="/templates/Images/panier.png" width="50" height="70" alt="Icone utilisateur" class="icon-right">
+              <a href="/panier">
+                <img src="/static/Images/panier.png" width="50" height="70" alt="Icone utilisateur" class="icon-right">
               </a>
         </header>
             <div>
@@ -83,19 +83,12 @@
         </form>
     </div>
 
-            <!-- <div class="form-group">
-                <label for="nomContact">Username:</label>
-                <input type="text" id="nomContact" name="nomContact" required>
-            </div> -->
-
-      
-
             </section>
             <section class="bas_de_page">
               <figure class="image_bas_de_page">
                 <div class="reassurance__img">
                   <img
-                    src="/templates/Images/004-padlock.png"
+                    src="/static/Images/004-padlock.png"
                     alt="Site Securisé"
                   />
                 </div>
@@ -105,7 +98,7 @@
               <figure class="image_bas_de_page">
                 <div class=>
                   <img
-                    src="/templates/Images/001-parcel.png"
+                    src="/static/Images/001-parcel.png"
                     alt="Service de livraison"/>
                 </div>
       
@@ -115,7 +108,7 @@
               </figure>
               <figure class="image_bas_de_page">
                 <div>
-                  <img src="/templates/Images/002-badge.png" alt="Qualité Garantie" />
+                  <img src="/static/Images/002-badge.png" alt="Qualité Garantie" />
                 </div>
       
                 <figcaption>Qualité Garantie</figcaption>
@@ -123,7 +116,7 @@
               <figure class="image_bas_de_page">
                 <div class="reassurance__img">
                   <img
-                    src="/templates/Images/003-support.png"
+                    src="/static/Images/003-support.png"
                     alt="Notre équipe à votre écoute"/>
                 </div>
       
@@ -157,6 +150,6 @@
       </div>
     </footer>
 
-           <script src="/templates/Script/script_acceuil.js"></script>    
+           <script src="/static/Script/script_acceuil.js"></script>    
     </body>
 </html>  
