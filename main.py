@@ -11,6 +11,7 @@ from sqlmodel import Field,SQLModel,create_engine,select,Session # pour la base 
 from typing import Annotated,Optional
 # import multipart
 import shutil
+import time
 
 
 app=FastAPI()
@@ -197,7 +198,8 @@ async def afficher_panier(request: Request):
                 "produit": produit,
                 "quantite": panier.quantite,
                 "sous_total": sous_total,
-                "utilisateur": utilisateur
+                "utilisateur": utilisateur,
+                "id_commande": panier.id_panier
                 
             })
             total_global += sous_total
@@ -230,7 +232,7 @@ async def ajouter_au_panier(request: Request, produit_id: int = Form(...), quant
             session.add(new_item)
         session.commit()
         
-        return RedirectResponse(url="/offre.html", status_code=303)
+        return RedirectResponse(url="/suggestions.html", status_code=303)
 
 # ____________________
 
@@ -249,11 +251,33 @@ async def supprimer_du_panier(id_item: int, request: Request):
         if item:
             session.add(item)
             session.commit()
-        if(item.quantite <= 0):
+        if(item.quantite == 0):
                 session.delete(item)
                 session.commit() 
         session.close()
 
+    return RedirectResponse(url="/panier", status_code=303)
+
+
+# ______________________
+
+@app.post("/panier/ajouter/{id_item}")
+async def supprimer_du_panier(id_item: int, request: Request):
+    id_current_user = 2  # À adapter dynamiquement
+    temp=0
+
+    with Session(connection) as session:
+        stmt = select(Panier).where(Panier.id_current_user == id_current_user, Panier.id_item == id_item)
+        item = session.exec(stmt).first()
+
+        temp = item.quantite
+        item.quantite = temp  +1
+        
+        if item:
+            session.add(item)
+            session.commit()
+        session.close()
+  
     return RedirectResponse(url="/panier", status_code=303)
 
 
@@ -306,24 +330,10 @@ def fill_table_produit(name:str,description:str,price:float,quantity:int,image:O
         session.close()   #????
 #______________________
 
-#contacter le vendeur
-@app.post("/contact_seller",response_class=HTMLResponse)
-async def mail_to_seller(request:Request,
-                  email_vendeur:str=Form(...),
-                  produit:str=Form(...),
-                  message:str=Form(...),
-                  nom_vendeur:str=Form(...)):
-        sujet="Object: Demande d'information sur votre produit.\n\n"
-        #le nom alex dans le message est un nom  de test on le remplacera par le nom de l'utilisateur courant
-        message=f"{sujet}Bonjour Monsieur/Madame {nom_vendeur},\n Vous avez recu un message de la part de alex pour votre article <<{produit}>>.\n\n Voici le message:  <<{message}>>  Vous pouvez repondre à ce message en repondant à l'email de alex.\n\n Cordialement,\n\n L'équipe de StudentTrade."
-    
-        return templates.TemplateResponse("simul_mail.html", {
-                "request": request,
-                "email_vendeur": email_vendeur,
-                "message": message
-                })
+
 # ______________________
 
+#validation de commande
 @app.post("/panier/commander",  response_class=HTMLResponse)
 async def commande(request:Request,
                    Nom_produit:str=Form(...),
@@ -331,18 +341,18 @@ async def commande(request:Request,
                    Nom_vendeur:str=Form(...),
                    Email_vendeur:str=Form(...),
                    Id_item:int=Form(...),
-                   Quantite:int=Form(...)      
+                   Quantite:int=Form(...),
+                   id_commande:int=Form(...)    
                    ):
         
         somme = Quantite*Prix_unitaire
-        if update_database(Id_item, Quantite):
-
-
+        if update_database(Id_item, Quantite,id_commande):
 
             sujet="Object: Confirmation commande.\n\n"
-            #le nom sam, alex dans le message est un nom  de test on le remplacera par le nom de l'utilisateur courant
+            #le nom sam, dans le message est un nom  de test on le remplacera par le nom de l'utilisateur courant
             message=f"{sujet}Bonjour Monsieur/Madame SAM,\n Vous venez de passer la commande de {Quantite} unite de l'article <<{Nom_produit}>>, vous venez d'etre debite de la somme de {somme}€, {Nom_vendeur} vas se charger \
-                    d'effectuer la livraison.\n\n Cordialement,\n\n L'équipe de StudentTrade."   
+                    d'effectuer la livraison.\n\n Cordialement,\n\n L'équipe de StudentTrade."
+            time.sleep(5)  # pour simuler le delai de reception du mail
             return templates.TemplateResponse("simul_mail.html", {
                     "request": request,
                     "email_vendeur": Email_vendeur,
@@ -355,9 +365,11 @@ async def commande(request:Request,
                     })
 # __________________________
 
-def update_database(Id_item, qte):
+def update_database(Id_item, qte,Id_panier):
     with Session(connection) as cursor:
         temp = 0
+        query=select(Panier).where(Panier.id_panier == Id_panier)
+        result=cursor.exec(query).first()
 
         statement = select(Produit).where(Produit.id_item == Id_item)
         resultat = cursor.exec(statement).first()
@@ -367,11 +379,12 @@ def update_database(Id_item, qte):
             resultat.quantity_item = temp
 
             cursor.add(resultat)
+            cursor.delete(result)
             cursor.commit()
-            if(resultat.quantity_item <= 0):
+            if(resultat.quantity_item == 0):
                 cursor.delete(resultat)
                 cursor.commit() 
-                cursor.close()        
+            cursor.close()        
             return True
         return False
     
