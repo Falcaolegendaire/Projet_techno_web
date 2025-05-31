@@ -12,6 +12,7 @@ from typing import Annotated,Optional
 # import multipart
 import shutil
 import time
+import os
 
 
 app=FastAPI()
@@ -346,7 +347,7 @@ async def commande(request:Request,
                    ):
         
         somme = Quantite*Prix_unitaire
-        if update_database(Id_item, Quantite,id_commande):
+        if allow_order(Id_item, Quantite,id_commande):
 
             sujet="Object: Confirmation commande.\n\n"
             #le nom sam, dans le message est un nom  de test on le remplacera par le nom de l'utilisateur courant
@@ -364,10 +365,11 @@ async def commande(request:Request,
                     "message": "Stock insuffisant"
                     })
 # __________________________
-
-def update_database(Id_item, qte,Id_panier):
+# verifie si le site a assez de stock pour la commamande et met à jour les stock de produits
+def allow_order(Id_item, qte,Id_panier):
     with Session(connection) as cursor:
         temp = 0
+
         query=select(Panier).where(Panier.id_panier == Id_panier)
         result=cursor.exec(query).first()
 
@@ -382,8 +384,12 @@ def update_database(Id_item, qte,Id_panier):
             cursor.delete(result)
             cursor.commit()
             if(resultat.quantity_item == 0):
+                image_path = resultat.image_item
+                if os.path.exists(image_path):
+                    os.remove(image_path) # ca permet de nettoyer les images sur le disque lors de la suppression d'un produit
+                cursor.add(resultat)
                 cursor.delete(resultat)
-                cursor.commit() 
+            cursor.commit() 
             cursor.close()        
             return True
         return False
