@@ -330,7 +330,22 @@ def fill_table_produit(name:str,description:str,price:float,quantity:int,image:O
         session.commit() 
         session.close()   #????
 #______________________
-
+#contacter le vendeur
+@app.post("/contact_seller",response_class=HTMLResponse)
+async def mail_to_seller(request:Request,
+                  email_vendeur:str=Form(...),
+                  produit:str=Form(...),
+                  message:str=Form(...),
+                  nom_vendeur:str=Form(...)):
+        sujet="Object: Demande d'information sur votre produit.\n\n"
+        #le nom alex dans le message est un nom  de test on le remplacera par le nom de l'utilisateur courant
+        message=f"{sujet}Bonjour Monsieur/Madame {nom_vendeur},\n Vous avez recu un message de la part de alex pour votre article <<{produit}>>.\n\n Voici le message:  <<{message}>>  Vous pouvez repondre à ce message en repondant à l'email de alex.\n\n Cordialement,\n\n L'équipe de StudentTrade."
+    
+        return templates.TemplateResponse("simul_mail.html", {
+                "request": request,
+                "email_vendeur": email_vendeur,
+                "message": message
+                })
 
 # ______________________
 
