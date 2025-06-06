@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware  # pour autoriser les requetes
 from sqlmodel import Field,SQLModel,create_engine,select,Session # pour la base de donnée( ORM)
 from typing import Annotated,Optional
+from security import get_password_hash
 # import multipart
 import shutil
 import time
@@ -35,6 +36,62 @@ def create_data_base():
 create_data_base()  # initialisation de la base de donnée
 
 
+#inscription
+@app.post("/register")
+async def register(request: Request, username: str = Form(...), email: str = Form(...), password: str = Form(...)):
+    hashed_pw = get_password_hash(password)
+    new_user = Utilisateur(username=username, email=email, hashed_password=hashed_pw, is_active=True)
+
+    with Session(connection) as session:
+        existing_user = session.exec(select(Utilisateur).where(Utilisateur.email == email)).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email déjà utilisé")
+        session.add(new_user)
+        session.commit()
+        return RedirectResponse(url="/", status_code=303)
+    
+
+from security import get_password_hash, verify_password, create_access_token, ALGORITHM, SECRET_KEY
+from fastapi.responses import JSONResponse
+from jose import jwt
+
+#connexion +token
+#@app.get("/login", response_class=HTMLResponse)
+#async def show_login_form(request: Request):
+    #return templates.TemplateResponse("connexion.html", {"request": request})
+
+@app.post("/login")
+async def login(request: Request, email: str = Form(...), password: str = Form(...)):
+    with Session(connection) as session:
+        user = session.exec(select(Utilisateur).where(Utilisateur.email == email)).first()
+        if not user or not verify_password(password, user.hashed_password):
+            raise HTTPException(status_code=401, detail="Identifiants invalides")
+
+        access_token = create_access_token(data={"sub": str(user.id_utilisateur)})
+        response = RedirectResponse(url="/acceuil.html", status_code=303)
+        response.set_cookie(key="access_token", value=access_token, httponly=True)
+        return response
+    
+    #vérification de l'utilisateur connecté
+from jose import JWTError, jwt
+
+def get_current_user(request: Request):
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Non authentifié")
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload.get("sub"))
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token invalide")
+
+    with Session(connection) as session:
+        user = session.get(Utilisateur, user_id)
+        if not user:
+            raise HTTPException(status_code=401, detail="Utilisateur non trouvé")
+        return user
+
+
 #____________________
 #acceuil
 @app.get("/",response_class=HTMLResponse)
@@ -45,7 +102,7 @@ async def connexion( request:Request):
 
 @app.get("/acceuil.html",response_class=HTMLResponse)
 async def home( request:Request):
-    return templates.TemplateResponse("acceuil.html", {"request":request})
+    return templates.TemplateResponse("acceuil.html", {"request":request, "user": Utilisateur})
 #____________________
 
 @app.get("/ajouter_offre.html",response_class=HTMLResponse)
