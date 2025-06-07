@@ -1,5 +1,4 @@
 from studentTrade_BD import Produit, Utilisateur, connection, Panier, NOtification # pour la base de donnée
-import hashlib
 import uvicorn  # serveur pour fastapi 
 from fastapi import FastAPI,Request,Form,HTTPException,UploadFile,File,Query  #API
 from pydantic import BaseModel # validation des données 
@@ -8,17 +7,21 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware  # pour autoriser les requetes
 from sqlmodel import Field,SQLModel,create_engine,select,Session # pour la base de donnée( ORM)
-from typing import Annotated,Optional
+from typing import Optional
 import shutil
 import os
-from security import get_password_hash, verify_password, ALGORITHM, SECRET_KEY
+from security import get_password_hash, verify_password
 from fastapi.responses import JSONResponse
+from starlette.middleware.sessions import SessionMiddleware # gestion des sessions 
+import secrets # module pour definir une clé secrete pour le middleware
 
 app=FastAPI()
 
 # ceci monte les fichiers statiques pour les images et les fichiers css
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates=Jinja2Templates(directory="templates")
+
+key=secrets.token_hex(32)
 
 # autoriser les requetes et l'utilisation des methodes 
 app.add_middleware(
@@ -27,15 +30,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+#creation du middleware pour la gestion des sessions
+app.add_middleware(SessionMiddleware,secret_key=key)
 # fonction de creation de la basse de donnée
 def create_data_base():
     SQLModel.metadata.create_all(connection)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
 
 create_data_base()  # initialisation de la base de donnée
 
-current_user_id=0
-name_current_user=""
-email_cuurent_user=""
+
 #inscription
 @app.post("/register")
 async def register(request: Request, username: str = Form(...), email: str = Form(...), password: str = Form(...)):
@@ -52,11 +55,6 @@ async def register(request: Request, username: str = Form(...), email: str = For
     
 
 
-# connexion +token
-# @app.get("/login", response_class=HTMLResponse)
-# async def show_login_form(request: Request):
-#     return templates.TemplateResponse("connexion.html", {"request": request})
-
 @app.post("/login")
 async def login(request: Request, email: str = Form(...), password: str = Form(...)):
     with Session(connection) as session:
@@ -64,10 +62,10 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
         if not user or not verify_password(password, user.hashed_password):
           return RedirectResponse(url="/", status_code=303)
         
-        global current_user_id, name_current_user,email_cuurent_user
-        current_user_id= user.id_utilisateur
-        name_current_user= user.username
-        email_cuurent_user=user.email
+        # gestion des sessions pour que chaque user ai sa propre session independante
+        request.session["user_id"]= user.id_utilisateur
+        request.session["user_name"]= user.username
+        request.session["user_email"]=user.email
 
         # access_token = create_access_token(data={"sub": str(user.id_utilisateur)})
         response = RedirectResponse(url="/acceuil.html", status_code=303)
@@ -75,23 +73,6 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
         return response
     
     #vérification de l'utilisateur connecté
-
-
-def get_current_user(request: Request):
-    token = request.cookies.get("access_token")
-    if not token:
-        raise HTTPException(status_code=401, detail="Non authentifié")
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = int(payload.get("sub"))
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token invalide")
-
-    with Session(connection) as session:
-        user = session.get(Utilisateur, user_id)
-        if not user:
-            raise HTTPException(status_code=401, detail="Utilisateur non trouvé")
-        return user
 
 
 #____________________
@@ -108,7 +89,7 @@ async def page_connexion( request:Request):
 
 @app.get("/acceuil.html",response_class=HTMLResponse)
 async def home( request:Request):
-
+    name_current_user=request.session.get("user_name")
     return templates.TemplateResponse("acceuil.html", {"request":request, "utilisateur":name_current_user})
 #____________________
 
@@ -244,6 +225,7 @@ async def voir_details(request: Request, produit_id: int):
 async def afficher_panier(request: Request):
 
     with Session(connection) as session:
+        current_user_id=request.session.get("user_id")
         stmt = select(Panier, Produit, Utilisateur).join(Produit, Produit.id_item == Panier.id_item).\
                         join(Utilisateur, Utilisateur.id_utilisateur == Produit.id_utilisateur).where(Panier.id_current_user == current_user_id)
         resultats = session.exec(stmt).all()
@@ -276,6 +258,8 @@ async def afficher_panier(request: Request):
 @app.post("/panier/ajouter", response_class=RedirectResponse)
 async def ajouter_au_panier(request: Request, produit_id: int = Form(...), quantite: int = Form(default=1)):
 
+    # recupere la valeur de l'id du user courant que l'on a ajouter plus haut dans le dictionnaire request.session
+    current_user_id=request.session.get("user_id")
     with Session(connection) as session:
         # Vérifie si l'article est déjà dans le panier
         statement = select(Panier).where(Panier.id_current_user == current_user_id, Panier.id_item == produit_id, Produit.quantity_item > 0)
@@ -296,7 +280,7 @@ async def ajouter_au_panier(request: Request, produit_id: int = Form(...), quant
 @app.post("/panier/supprimer/{id_item}")
 async def supprimer_du_panier(id_item: int, request: Request):
     temp=0
-
+    current_user_id=request.session.get("user_id")
     with Session(connection) as session:
         stmt = select(Panier).where(Panier.id_current_user == current_user_id, Panier.id_item == id_item)
         item = session.exec(stmt).first()
@@ -320,7 +304,7 @@ async def supprimer_du_panier(id_item: int, request: Request):
 @app.post("/panier/ajouter/{id_item}")
 async def supprimer_du_panier(id_item: int, request: Request):
     temp=0
-
+    current_user_id=request.session.get("user_id")
     with Session(connection) as session:
         stmt = select(Panier).where(Panier.id_current_user == current_user_id, Panier.id_item == id_item)
         item = session.exec(stmt).first()
@@ -370,8 +354,9 @@ async def add_item( request:Request,
             return RedirectResponse(url="/ajouter_offre.html",status_code=303)
 
 # -----
-def fill_table_produit(name:str,description:str,price:float,quantity:int,image:Optional[str]=None,category:str="autres"):
+def fill_table_produit(request:Request,name:str,description:str,price:float,quantity:int,image:Optional[str]=None,category:str="autres"):
     """ fonction pour remplir la table produit"""""
+    current_user_id=request.session.get("user_id")
     with Session(connection) as session:
         session.add(Produit(name_item=name,
                             description=description,
@@ -393,6 +378,8 @@ async def mail_to_seller(request:Request,
                   message:str=Form(...),
                   nom_vendeur:str=Form(...),
                   id_vendeur:int=Form(...)):
+        name_current_user=request.session.get("user_name")
+        email_cuurent_user=request.session.get("user_email")
         notification=f"Bonjour Monsieur/Madame {nom_vendeur},\n Vous avez recu un message de la part de {name_current_user} pour votre article <<{produit}>>.\n\n Voici le message:  <<{message}>>  Vous pouvez repondre à ce message en repondant à l'email suivant:{email_cuurent_user} \n\n Cordialement,\n\n L'équipe de StudentTrade."
         with Session(connection) as session:
             session.add(NOtification(id_utilisateur=id_vendeur,message=notification))
@@ -401,6 +388,7 @@ async def mail_to_seller(request:Request,
 
 @app.get("/notification.html",response_class=HTMLResponse)
 async def notification( request:Request):
+    current_user_id=request.session.get("user_id")
     with Session(connection) as cursor:
         query=select(NOtification).where(NOtification.id_utilisateur==current_user_id)
         notification=cursor.exec(query).all()
@@ -433,7 +421,8 @@ async def commande(request:Request,
                    id_commande:int=Form(...),
                    id_vendeur:int=Form(...)  
                    ):
-        
+        name_current_user=request.session.get("user_name")
+        current_user_id=request.session.get("user_id")
         somme = Quantite*Prix_unitaire
         if allow_order(Id_item, Quantite,id_commande):
             notification_acheteur=f"Bonjour Monsieur/Madame {name_current_user},\n Vous venez de passer la commande de {Quantite} unite de l'article <<{Nom_produit}>>, vous venez d'etre debite de la somme de {somme}€, {Nom_vendeur} vas se charger \
