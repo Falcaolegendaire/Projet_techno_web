@@ -1,4 +1,4 @@
-from studentTrade_BD import Produit, Utilisateur, connection, Panier  # pour la base de donnée
+from studentTrade_BD import Produit, Utilisateur, connection, Panier, NOtification # pour la base de donnée
 import hashlib
 import uvicorn  # serveur pour fastapi 
 from fastapi import FastAPI,Request,Form,HTTPException,UploadFile,File,Query  #API
@@ -9,12 +9,10 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware  # pour autoriser les requetes
 from sqlmodel import Field,SQLModel,create_engine,select,Session # pour la base de donnée( ORM)
 from typing import Annotated,Optional
-from security import get_password_hash
-# import multipart
 import shutil
-import time
 import os
-
+from security import get_password_hash, verify_password, ALGORITHM, SECRET_KEY
+from fastapi.responses import JSONResponse
 
 app=FastAPI()
 
@@ -31,11 +29,13 @@ app.add_middleware(
 )
 # fonction de creation de la basse de donnée
 def create_data_base():
-    SQLModel.metadata.create_all(connection)
+    SQLModel.metadata.create_all(connection)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
 
 create_data_base()  # initialisation de la base de donnée
 
-
+current_user_id=0
+name_current_user=""
+email_cuurent_user=""
 #inscription
 @app.post("/register")
 async def register(request: Request, username: str = Form(...), email: str = Form(...), password: str = Form(...)):
@@ -51,29 +51,31 @@ async def register(request: Request, username: str = Form(...), email: str = For
         return RedirectResponse(url="/", status_code=303)
     
 
-from security import get_password_hash, verify_password, create_access_token, ALGORITHM, SECRET_KEY
-from fastapi.responses import JSONResponse
-from jose import jwt
 
-#connexion +token
-#@app.get("/login", response_class=HTMLResponse)
-#async def show_login_form(request: Request):
-    #return templates.TemplateResponse("connexion.html", {"request": request})
+# connexion +token
+# @app.get("/login", response_class=HTMLResponse)
+# async def show_login_form(request: Request):
+#     return templates.TemplateResponse("connexion.html", {"request": request})
 
 @app.post("/login")
 async def login(request: Request, email: str = Form(...), password: str = Form(...)):
     with Session(connection) as session:
         user = session.exec(select(Utilisateur).where(Utilisateur.email == email)).first()
         if not user or not verify_password(password, user.hashed_password):
-            raise HTTPException(status_code=401, detail="Identifiants invalides")
+          return RedirectResponse(url="/", status_code=303)
+        
+        global current_user_id, name_current_user,email_cuurent_user
+        current_user_id= user.id_utilisateur
+        name_current_user= user.username
+        email_cuurent_user=user.email
 
-        access_token = create_access_token(data={"sub": str(user.id_utilisateur)})
+        # access_token = create_access_token(data={"sub": str(user.id_utilisateur)})
         response = RedirectResponse(url="/acceuil.html", status_code=303)
-        response.set_cookie(key="access_token", value=access_token, httponly=True)
+        # response.set_cookie(key="access_token", value=access_token, httponly=True)
         return response
     
     #vérification de l'utilisateur connecté
-from jose import JWTError, jwt
+
 
 def get_current_user(request: Request):
     token = request.cookies.get("access_token")
@@ -97,12 +99,17 @@ def get_current_user(request: Request):
 @app.get("/",response_class=HTMLResponse)
 async def connexion( request:Request):
     return templates.TemplateResponse("connexion.html", {"request":request})
+
+@app.get("/connexion.html",response_class=HTMLResponse)
+async def page_connexion( request:Request):
+    return templates.TemplateResponse("connexion.html", {"request":request})
 #____________________
 #
 
 @app.get("/acceuil.html",response_class=HTMLResponse)
 async def home( request:Request):
-    return templates.TemplateResponse("acceuil.html", {"request":request, "user": Utilisateur})
+
+    return templates.TemplateResponse("acceuil.html", {"request":request, "utilisateur":name_current_user})
 #____________________
 
 @app.get("/ajouter_offre.html",response_class=HTMLResponse)
@@ -166,11 +173,7 @@ async def meuble( request:Request):
             "request": request,
             "produits": produits
         })
-#____________________
 
-@app.get("/notification.html",response_class=HTMLResponse)
-async def notification( request:Request):
-    return templates.TemplateResponse("notification.html", {"request":request})
 #____________________
 
 @app.get("/panier.html",response_class=HTMLResponse)
@@ -180,7 +183,7 @@ async def panier( request:Request):
 
 @app.get("/profil.html",response_class=HTMLResponse)
 async def profil( request:Request):
-    return templates.TemplateResponse("profil.html", {"request":request})
+    return templates.TemplateResponse("profil.html", {"request":request})  #                                  current_user_id sera utile ici
 #____________________
 #recherche
 @app.get("/search",response_class=HTMLResponse)
@@ -234,17 +237,15 @@ async def voir_details(request: Request, produit_id: int):
         })
 
 
-
 #_____________________
 
 #afficher le panier
 @app.get("/panier", response_class=HTMLResponse)
 async def afficher_panier(request: Request):
-    id_current_user = 2  # à adapter dynamiquement plus tard
 
     with Session(connection) as session:
         stmt = select(Panier, Produit, Utilisateur).join(Produit, Produit.id_item == Panier.id_item).\
-                        join(Utilisateur, Utilisateur.id_utilisateur == Produit.id_utilisateur).where(Panier.id_current_user == id_current_user)
+                        join(Utilisateur, Utilisateur.id_utilisateur == Produit.id_utilisateur).where(Panier.id_current_user == current_user_id)
         resultats = session.exec(stmt).all()
 
         panier_items = []
@@ -269,24 +270,22 @@ async def afficher_panier(request: Request):
     })
 
 
-
 #______________________
 
 #ajouter au panier
 @app.post("/panier/ajouter", response_class=RedirectResponse)
 async def ajouter_au_panier(request: Request, produit_id: int = Form(...), quantite: int = Form(default=1)):
-    id_current_user = 2  # À adapter : récupérer depuis session / utilisateur connecté
 
     with Session(connection) as session:
         # Vérifie si l'article est déjà dans le panier
-        statement = select(Panier).where(Panier.id_current_user == id_current_user, Panier.id_item == produit_id, Produit.quantity_item > 0)
+        statement = select(Panier).where(Panier.id_current_user == current_user_id, Panier.id_item == produit_id, Produit.quantity_item > 0)
         item = session.exec(statement).first()
 
         if item:
             item.quantite += quantite
             
         else:
-            new_item = Panier(id_current_user=id_current_user, id_item=produit_id, quantite=quantite)
+            new_item = Panier(id_current_user=current_user_id, id_item=produit_id, quantite=quantite)
             session.add(new_item)
         session.commit()
         
@@ -296,11 +295,10 @@ async def ajouter_au_panier(request: Request, produit_id: int = Form(...), quant
 
 @app.post("/panier/supprimer/{id_item}")
 async def supprimer_du_panier(id_item: int, request: Request):
-    id_current_user = 2  # À adapter dynamiquement
     temp=0
 
     with Session(connection) as session:
-        stmt = select(Panier).where(Panier.id_current_user == id_current_user, Panier.id_item == id_item)
+        stmt = select(Panier).where(Panier.id_current_user == current_user_id, Panier.id_item == id_item)
         item = session.exec(stmt).first()
 
         temp = item.quantite
@@ -321,11 +319,10 @@ async def supprimer_du_panier(id_item: int, request: Request):
 
 @app.post("/panier/ajouter/{id_item}")
 async def supprimer_du_panier(id_item: int, request: Request):
-    id_current_user = 2  # À adapter dynamiquement
     temp=0
 
     with Session(connection) as session:
-        stmt = select(Panier).where(Panier.id_current_user == id_current_user, Panier.id_item == id_item)
+        stmt = select(Panier).where(Panier.id_current_user == current_user_id, Panier.id_item == id_item)
         item = session.exec(stmt).first()
 
         temp = item.quantite
@@ -380,31 +377,49 @@ def fill_table_produit(name:str,description:str,price:float,quantity:int,image:O
                             description=description,
                             price_item=price,
                             quantity_item=quantity,
-                            id_utilisateur=1,
+                            id_utilisateur=current_user_id,
                             category_item=category,
                             image_item=image
                             ))
         session.commit() 
         session.close()   #????
 #______________________
+
 #contacter le vendeur
 @app.post("/contact_seller",response_class=HTMLResponse)
 async def mail_to_seller(request:Request,
                   email_vendeur:str=Form(...),
                   produit:str=Form(...),
                   message:str=Form(...),
-                  nom_vendeur:str=Form(...)):
-        sujet="Object: Demande d'information sur votre produit.\n\n"
-        #le nom alex dans le message est un nom  de test on le remplacera par le nom de l'utilisateur courant
-        message=f"{sujet}Bonjour Monsieur/Madame {nom_vendeur},\n Vous avez recu un message de la part de alex pour votre article <<{produit}>>.\n\n Voici le message:  <<{message}>>  Vous pouvez repondre à ce message en repondant à l'email de alex.\n\n Cordialement,\n\n L'équipe de StudentTrade."
-    
-        return templates.TemplateResponse("simul_mail.html", {
-                "request": request,
-                "email_vendeur": email_vendeur,
-                "message": message
-                })
+                  nom_vendeur:str=Form(...),
+                  id_vendeur:int=Form(...)):
+        notification=f"Bonjour Monsieur/Madame {nom_vendeur},\n Vous avez recu un message de la part de {name_current_user} pour votre article <<{produit}>>.\n\n Voici le message:  <<{message}>>  Vous pouvez repondre à ce message en repondant à l'email suivant:{email_cuurent_user} \n\n Cordialement,\n\n L'équipe de StudentTrade."
+        with Session(connection) as session:
+            session.add(NOtification(id_utilisateur=id_vendeur,message=notification))
+            session.commit()
+        return RedirectResponse(url="/panier", status_code=303)
 
-# ______________________
+@app.get("/notification.html",response_class=HTMLResponse)
+async def notification( request:Request):
+    with Session(connection) as cursor:
+        query=select(NOtification).where(NOtification.id_utilisateur==current_user_id)
+        notification=cursor.exec(query).all()
+    return templates.TemplateResponse("notification.html", {
+                    "request": request,
+                    "notification": notification
+                    })
+# _______________________
+
+@app.post("/notification/supprimer/{id_notif}")
+async def supprimer_de_notification(id_notif: int, request: Request):
+    with Session(connection) as session:
+        stmt = select(NOtification).where(NOtification.id_notification == id_notif)
+        result = session.exec(stmt).first()
+        session.delete(result)
+        session.commit()
+    return RedirectResponse(url="/notification.html",status_code=303)
+
+
 
 #validation de commande
 @app.post("/panier/commander",  response_class=HTMLResponse)
@@ -415,27 +430,21 @@ async def commande(request:Request,
                    Email_vendeur:str=Form(...),
                    Id_item:int=Form(...),
                    Quantite:int=Form(...),
-                   id_commande:int=Form(...)    
+                   id_commande:int=Form(...),
+                   id_vendeur:int=Form(...)  
                    ):
         
         somme = Quantite*Prix_unitaire
         if allow_order(Id_item, Quantite,id_commande):
-
-            sujet="Object: Confirmation commande.\n\n"
-            #le nom sam, dans le message est un nom  de test on le remplacera par le nom de l'utilisateur courant
-            message=f"{sujet}Bonjour Monsieur/Madame SAM,\n Vous venez de passer la commande de {Quantite} unite de l'article <<{Nom_produit}>>, vous venez d'etre debite de la somme de {somme}€, {Nom_vendeur} vas se charger \
+            notification_acheteur=f"Bonjour Monsieur/Madame {name_current_user},\n Vous venez de passer la commande de {Quantite} unite de l'article <<{Nom_produit}>>, vous venez d'etre debite de la somme de {somme}€, {Nom_vendeur} vas se charger \
                     d'effectuer la livraison.\n\n Cordialement,\n\n L'équipe de StudentTrade."
-            time.sleep(5)  # pour simuler le delai de reception du mail
-            return templates.TemplateResponse("simul_mail.html", {
-                    "request": request,
-                    "email_vendeur": Email_vendeur,
-                    "message": message
-                    })
-        return templates.TemplateResponse("simul_mail.html", {
-                    "request": request,
-                    "email_vendeur": "",
-                    "message": "Stock insuffisant"
-                    })
+            notification_vendeur=f"Bonjour Monsieur/Madame {Nom_vendeur},\n Vous avez une commande de {Quantite} unité(s) de votre produit <<{Nom_produit}>> de la part du client {name_current_user} veillez à acheminer la commande dans un delai de 5 jours maximun\
+                  \n\n Cordialement,\n\n L'équipe de StudentTrade."
+            with Session(connection) as session:
+                session.add(NOtification(id_utilisateur=id_vendeur,message=notification_vendeur))
+                session.add(NOtification(id_utilisateur=current_user_id,message=notification_acheteur))
+                session.commit()
+        return RedirectResponse(url="/panier",status_code=303)
 # __________________________
 # verifie si le site a assez de stock pour la commamande et met à jour les stock de produits
 def allow_order(Id_item, qte,Id_panier):

@@ -45,7 +45,7 @@ bouton_logout.addEventListener('click',function(){
     bool=confirm(" \u26A0\uFE0F voulez vous vraiment vous deconnectez?");
     if (bool){
         alert("deconnexion reussie 	\u2705");
-        window.location.replace("/connexion.html"); 
+        window.location.replace("/"); 
     }
     
 });

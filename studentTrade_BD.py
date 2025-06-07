@@ -5,7 +5,7 @@ nom_data_base="StudentTrade.db"
 connection= create_engine(f"sqlite:///{nom_data_base}",echo=True)
 
 class Utilisateur(SQLModel, table=True):
-        id_utilisateur: Optional[int]= Field(default=1,primary_key=True)
+        id_utilisateur: Optional[int]= Field(default=None,primary_key=True)
         username: str=Field(index=True,unique=True)
         email:str =Field(index=True,unique=True)  # pour l'unicité des emails
         hashed_password:str
@@ -28,4 +28,9 @@ class Panier(SQLModel, table=True):
     id_current_user: int
     id_item: Optional[int] = Field(default=None, foreign_key="produit.id_item")
     quantite: int = 1
+
+class NOtification(SQLModel,table=True):
+        id_notification: Optional[int]= Field(default=None,primary_key=True)
+        id_utilisateur: Optional[int] = Field(default=None, foreign_key="utilisateur.id_utilisateur")
+        message: Optional[str]=Field(default=None,nullable=True)
 
