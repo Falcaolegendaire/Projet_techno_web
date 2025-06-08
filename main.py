@@ -1,5 +1,4 @@
 from studentTrade_BD import Produit, Utilisateur, connection, Panier, NOtification # pour la base de donnée
-import hashlib
 import uvicorn  # serveur pour fastapi 
 from fastapi import FastAPI,Request,Form,HTTPException,UploadFile,File,Query  #API
 from pydantic import BaseModel # validation des données 
@@ -7,7 +6,7 @@ from fastapi.responses import HTMLResponse,RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware  # pour autoriser les requetes
-from sqlmodel import Field,SQLModel,create_engine,select,Session # pour la base de donnée( ORM)
+from sqlmodel import Field,SQLModel,create_engine,select,Session,delete # pour la base de donnée( ORM)
 from typing import Annotated,Optional
 import shutil
 import os
@@ -15,7 +14,6 @@ from security import get_password_hash, verify_password, ALGORITHM, SECRET_KEY
 from fastapi.responses import JSONResponse
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from starlette.middleware.sessions import SessionMiddleware # gestion des sessions 
 import secrets # module pour definir une clé secrete pour le middleware
 
 app=FastAPI()
@@ -32,8 +30,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-#creation du middleware pour la gestion des sessions
-app.add_middleware(SessionMiddleware,secret_key=key)
 
 # fonction de creation de la basse de donnée
 def create_data_base():
@@ -41,9 +37,7 @@ def create_data_base():
 
 create_data_base()  # initialisation de la base de donnée
 
-current_user_id=0
-name_current_user=""
-email_cuurent_user=""
+
 #inscription
 @app.post("/register")
 async def register(request: Request, username: str = Form(...), email: str = Form(...), password: str = Form(...)):
@@ -60,27 +54,23 @@ async def register(request: Request, username: str = Form(...), email: str = For
     
 
 
-# connexion +token
-# @app.get("/login", response_class=HTMLResponse)
-# async def show_login_form(request: Request):
-#     return templates.TemplateResponse("connexion.html", {"request": request})
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+
+#____________________
+
 @app.post("/login")
 async def login(request: Request, email: str = Form(...), password: str = Form(...)):
     with Session(connection) as session:
         user = session.exec(select(Utilisateur).where(Utilisateur.email == email)).first()
         if not user or not verify_password(password, user.hashed_password):
-          return RedirectResponse(url="/", status_code=303)
-        
-               # gestion des sessions pour que chaque user ai sa propre session independante
-        request.session["user_id"]= user.id_utilisateur
-        request.session["user_name"]= user.username
-        request.session["user_email"]=user.email
+          return templates.TemplateResponse("connexion.html", {"request":request,
+                                                                "error":True,
+                                                                "style":"border: 2px solid red;"})
 
         access_token = create_access_token(data={"sub": str(user.id_utilisateur)})
         response = RedirectResponse(url="/acceuil.html", status_code=303)
@@ -106,22 +96,24 @@ def get_current_user(request: Request):
             raise HTTPException(status_code=401, detail="Utilisateur non trouvé")
         return user
 
-
 #____________________
-#acceuil
 @app.get("/",response_class=HTMLResponse)
 async def connexion( request:Request):
-    return templates.TemplateResponse("connexion.html", {"request":request})
+    return templates.TemplateResponse("connexion.html", {"request":request, "error":False,
+                                                         "Style":""})
 
 @app.get("/connexion.html",response_class=HTMLResponse)
 async def page_connexion( request:Request):
-    return templates.TemplateResponse("connexion.html", {"request":request})
+    return templates.TemplateResponse("connexion.html", {"request":request, "error":False,
+                                                         "style":""})
 #____________________
-#
+#____________________
+
 
 @app.get("/acceuil.html",response_class=HTMLResponse)
 async def home( request:Request):
-    name_current_user=request.session.get("user_name")
+    user= get_current_user(request)
+    name_current_user=user.username
 
     return templates.TemplateResponse("acceuil.html", {"request":request, "utilisateur":name_current_user})
 #____________________
@@ -152,7 +144,7 @@ async def document( request:Request):
 async def livre( request:Request):
     with Session(connection) as cursor:
         statement = select(Produit, Utilisateur).join(Utilisateur, Produit.id_utilisateur == Utilisateur.id_utilisateur).\
-                            where(Produit.category_item == "livre")
+                            where(Produit.category_item == "livre",Produit.quantity_item>0)
         produits = cursor.exec(statement).all()
 
         return templates.TemplateResponse("livre.html", {
@@ -166,7 +158,7 @@ async def livre( request:Request):
 async def meuble( request:Request):
     with Session(connection) as cursor:
         statement = select(Produit, Utilisateur).join(Utilisateur, Produit.id_utilisateur == Utilisateur.id_utilisateur).\
-                    where(Produit.category_item == "mobilier")
+                    where(Produit.category_item == "mobilier",Produit.quantity_item>0)
         produits = cursor.exec(statement).all()
 
         return templates.TemplateResponse("mobilier.html", {
@@ -180,7 +172,7 @@ async def meuble( request:Request):
 async def meuble( request:Request):
     with Session(connection) as cursor:
         statement = select(Produit, Utilisateur).join(Utilisateur, Produit.id_utilisateur == Utilisateur.id_utilisateur).\
-                            where(Produit.category_item == "electronique")
+                            where(Produit.category_item == "electronique",Produit.quantity_item>0)
         produits = cursor.exec(statement).all()
 
         return templates.TemplateResponse("electronique.html", {
@@ -208,7 +200,59 @@ async def profil(request: Request, message: str = ""):
         "produits": produits,
         "message": message
     })
-from fastapi import Form
+
+# suppression de l'utilisateur satisfaisant les règles(RGPD)
+@app.post("/supprimer/profil", response_class=HTMLResponse)
+async def delete_profil(request: Request):
+    user = get_current_user(request)
+
+    with Session(connection) as session:
+        query_1=delete(Panier).where(Panier.id_current_user==user.id_utilisateur)
+        query_2=select(Produit).where(Produit.id_utilisateur==user.id_utilisateur)
+        query_3=select(Utilisateur).where(Utilisateur.id_utilisateur==user.id_utilisateur)
+        query_4=delete(NOtification).where(NOtification.id_utilisateur==user.id_utilisateur)
+      
+        
+        session.exec(query_1)
+        session.exec(query_4)
+        result_2=session.exec(query_2).all()
+        result_3=session.exec(query_3).first()
+        notifiacations =session.exec(select(NOtification)).all()
+        
+        for produit in result_2:
+            produit.description="None"
+            produit.category_item="None"
+            if produit.image_item and os.path.exists(produit.image_item):
+                os.remove(produit.image_item) 
+            produit.image_item="None"
+            produit.quantity_item=0
+            produit.price_item=0
+            produit.name_item="None"
+
+        for notif in notifiacations:
+            mot="commande"
+            # ici je modifie juste les notifications qui n'indiquent pas de commande car les notifications de commandes peuvent faire preuve de
+            # recu pour le client qui commande 
+            if (result_3.username in notif.message and mot not in notif.message):
+                new_nom="<<Cette utilisateur n'utilise plus ce site>>"
+                new_email="<< Email indisponible car l'utilisateur n'utilise plus ce site>>"
+                notif.message=notif.message.replace(result_3.username,new_nom)
+                notif.message=notif.message.replace(result_3.email,new_email)
+
+        result_3.username="None"
+        result_3.email="None"
+        result_3.hashed_password="None"
+        result_3.is_active=0
+        
+        session.add_all(result_2)
+        session.add(result_3)
+        session.add_all(notifiacations)
+        session.commit()
+        
+    return RedirectResponse(url="/", status_code=303)
+
+
+
 
 @app.post("/profil/update")
 async def update_profil(
@@ -229,6 +273,7 @@ async def update_profil(
         session.commit()
 
     return RedirectResponse(url="/profil.html?message=Profil+mis+à+jour", status_code=303)
+    
 @app.post("/offre/supprimer/{id_item}")
 async def supprimer_offre(id_item: int, request: Request):
     user = get_current_user(request)
@@ -238,7 +283,9 @@ async def supprimer_offre(id_item: int, request: Request):
 
         if not produit or produit.id_utilisateur != user.id_utilisateur:
             raise HTTPException(status_code=403, detail="Non autorisé")
-
+        
+        if os.path.exists(produit.image_item):
+            os.remove(produit.image_item)
         session.delete(produit)
         session.commit()
 
@@ -250,10 +297,9 @@ async def supprimer_offre(id_item: int, request: Request):
 async def search( request:Request, recherche: str = Query(...)):
     """test pour la recherche"""    
     with Session(connection) as cursor:
-        current_user_id=request.session.get("user_id")
 
         statement = select(Produit, Utilisateur).join(Utilisateur, Produit.id_utilisateur == Utilisateur.id_utilisateur).\
-                        where(Produit.name_item.ilike(f"%{recherche}%"))
+                        where(Produit.name_item.ilike(f"%{recherche}%"),Produit.quantity_item>0)
         results = cursor.exec(statement).all()
         if not results:
             return templates.TemplateResponse("search.html", {"request": request, "produits": [], "message": "Aucun élément trouvé."})
@@ -263,7 +309,7 @@ async def search( request:Request, recherche: str = Query(...)):
 @app.get("/suggestions.html",response_class=HTMLResponse)
 async def suggestions( request:Request):
     with Session(connection) as cursor:
-        statement = select(Produit, Utilisateur).join(Utilisateur, Produit.id_utilisateur == Utilisateur.id_utilisateur)
+        statement = select(Produit, Utilisateur).join(Utilisateur, Produit.id_utilisateur == Utilisateur.id_utilisateur).where(Produit.quantity_item>0)
                        
         results = cursor.exec(statement).all()
         if not results:
@@ -276,7 +322,7 @@ async def suggestions( request:Request):
 async def afficher_vetement( request:Request):  
     with Session(connection) as cursor:
         statement = select(Produit, Utilisateur).join(Utilisateur, Produit.id_utilisateur == Utilisateur.id_utilisateur).\
-                        where(Produit.category_item == "habillement")
+                        where(Produit.category_item == "habillement",Produit.quantity_item>0)
         produits = cursor.exec(statement).all()
 
         return templates.TemplateResponse("habillement.html", {
@@ -304,7 +350,8 @@ async def voir_details(request: Request, produit_id: int):
 #afficher le panier
 @app.get("/panier", response_class=HTMLResponse)
 async def afficher_panier(request: Request):
-
+    user= get_current_user(request)
+    current_user_id=user.id_utilisateur
     with Session(connection) as session:
         stmt = select(Panier, Produit, Utilisateur).join(Produit, Produit.id_item == Panier.id_item).\
                         join(Utilisateur, Utilisateur.id_utilisateur == Produit.id_utilisateur).where(Panier.id_current_user == current_user_id)
@@ -337,8 +384,9 @@ async def afficher_panier(request: Request):
 #ajouter au panier
 @app.post("/panier/ajouter", response_class=RedirectResponse)
 async def ajouter_au_panier(request: Request, produit_id: int = Form(...), quantite: int = Form(default=1)):
-        # recupere la valeur de l'id du user courant que l'on a ajouter plus haut dans le dictionnaire request.session
-    current_user_id=request.session.get("user_id")
+
+    user= get_current_user(request)
+    current_user_id=user.id_utilisateur
 
     with Session(connection) as session:
         # Vérifie si l'article est déjà dans le panier
@@ -359,16 +407,16 @@ async def ajouter_au_panier(request: Request, produit_id: int = Form(...), quant
 
 @app.post("/panier/supprimer/{id_item}")
 async def supprimer_du_panier(id_item: int, request: Request):
-    temps=0
-
-    current_user_id=request.session.get("user_id")
+    temp=0
+    user= get_current_user(request)
+    current_user_id=user.id_utilisateur
 
     with Session(connection) as session:
         stmt = select(Panier).where(Panier.id_current_user == current_user_id, Panier.id_item == id_item)
         item = session.exec(stmt).first()
 
-        temps = item.quantite
-        item.quantite = temps - 1
+        temp = item.quantite
+        item.quantite = temp - 1
         
         if item:
             session.add(item)
@@ -386,7 +434,8 @@ async def supprimer_du_panier(id_item: int, request: Request):
 @app.post("/panier/ajouter/{id_item}")
 async def supprimer_du_panier(id_item: int, request: Request):
     temp=0
-
+    user= get_current_user(request)
+    current_user_id=user.id_utilisateur
     with Session(connection) as session:
         stmt = select(Panier).where(Panier.id_current_user == current_user_id, Panier.id_item == id_item)
         item = session.exec(stmt).first()
@@ -426,7 +475,7 @@ async def add_item( request:Request,
             with open(full_path, "wb") as buffer:
                 shutil.copyfileobj(image.file, buffer)
 
-            fill_table_produit(name=name_item,
+            fill_table_produit(request,name=name_item,
                             description=description,
                             price=price_item,
                             quantity=quantity_item,
@@ -436,9 +485,10 @@ async def add_item( request:Request,
             return RedirectResponse(url="/ajouter_offre.html",status_code=303)
 
 # -----
-def fill_table_produit(name:str,description:str,price:float,quantity:int,image:Optional[str]=None,category:str="autres"):
+def fill_table_produit(request:Request,name:str,description:str,price:float,quantity:int,image:Optional[str]=None,category:str="autres"):
     """ fonction pour remplir la table produit"""""
-    current_user_id=request.session.get("user_id")
+    user= get_current_user(request)
+    current_user_id=user.id_utilisateur
 
     with Session(connection) as session:
         session.add(Produit(name_item=name,
@@ -461,8 +511,9 @@ async def mail_to_seller(request:Request,
                   message:str=Form(...),
                   nom_vendeur:str=Form(...),
                   id_vendeur:int=Form(...)):
-        name_current_user=request.session.get("user_name")
-        email_cuurent_user=request.session.get("user_email")
+        user= get_current_user(request)
+        name_current_user=user.username
+        email_cuurent_user=user.email
 
         notification=f"Bonjour Monsieur/Madame {nom_vendeur},\n Vous avez recu un message de la part de {name_current_user} pour votre article <<{produit}>>.\n\n Voici le message:  <<{message}>>  Vous pouvez repondre à ce message en repondant à l'email suivant:{email_cuurent_user} \n\n Cordialement,\n\n L'équipe de StudentTrade."
         with Session(connection) as session:
@@ -472,7 +523,8 @@ async def mail_to_seller(request:Request,
 
 @app.get("/notification.html",response_class=HTMLResponse)
 async def notification( request:Request):
-    current_user_id=request.session.get("user_id")
+    user= get_current_user(request)
+    current_user_id=user.id_utilisateur
 
     with Session(connection) as cursor:
         query=select(NOtification).where(NOtification.id_utilisateur==current_user_id)
@@ -506,7 +558,9 @@ async def commande(request:Request,
                    id_commande:int=Form(...),
                    id_vendeur:int=Form(...)  
                    ):
-        
+        user= get_current_user(request)
+        current_user_id=user.id_utilisateur
+        name_current_user=user.username
         somme = Quantite*Prix_unitaire
         if allow_order(Id_item, Quantite,id_commande):
             notification_acheteur=f"Bonjour Monsieur/Madame {name_current_user},\n Vous venez de passer la commande de {Quantite} unite de l'article <<{Nom_produit}>>, vous venez d'etre debite de la somme de {somme}€, {Nom_vendeur} vas se charger \
@@ -544,7 +598,7 @@ def allow_order(Id_item, qte,Id_panier):
                 cursor.add(resultat)
                 cursor.delete(resultat)
             cursor.commit() 
-            cursor.close()        
+                
             return True
         return False
     

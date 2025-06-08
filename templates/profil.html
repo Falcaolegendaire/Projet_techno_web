@@ -6,7 +6,106 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="icon" href="/static/Images/test_logo.png">    <!-- le logo sera present sur toutes les pages-->
         <link rel="stylesheet" href="/static/styles/style_acceuil.css">
+       
+        <style>
+          main {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 
+
+h1 {
+    text-align: center;
+    font-size: 2.5em;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+
+h3 {
+    color: #34495e;
+    margin-top: 30px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
+}
+
+form {
+    margin-top: 15px;
+}
+
+label {
+    display: block;
+    margin: 12px 0 6px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    transition: border-color 0.2s;
+}
+
+input:focus {
+    border-color: rgba(230, 174, 20, 0.904);
+    outline: none;
+}
+
+
+button {
+    background-color: rgba(230, 174, 20, 0.904);
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: black;
+}
+
+form[action="/supprimer/profil"] button {
+    background-color: #e74c3c;
+}
+
+form[action="/supprimer/profil"] button:hover {
+    background-color: #c0392b;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+li strong {
+    color: #2c3e50;
+}
+
+#delete_account:hover {
+             transition: all 0.5s ease;
+                transform: scale(1.1);
+          
+}
+
+        </style>
         
     </head>
     <body>
@@ -58,6 +157,12 @@
 
                 <button type="submit">Mettre à jour</button>
                 </form>
+                <form method="post" action="/supprimer/profil"  onsubmit="return confirmerSuppression();">
+                                <button id="delete_account" type="submit" style="background-color: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                                    🗑 Supprimer votre compte
+                                </button>
+                            </form><br>
+                            
               <h3>Mes Offres</h3>
               {% if produits %}
                 <ul>

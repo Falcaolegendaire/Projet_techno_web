@@ -1,0 +1,5 @@
+Bonjour Madame, Monsieur,
+
+Pour notre site on a utilisé plusieurs module, veillez à bien installer ces modules car le code ne fonctionne pas quand il y'a des modules qui manquent, ceci fait pour la simulation veillez lancer le serveur sur le port 8000, vous allez voir notre page d'inscription, crée un compte et  connectez vous par la suite.
+
+Bonne utilisation. 
