@@ -39,14 +39,43 @@
                 <!--  le code du milieu de la -->
             <section>
               <center><strong><u><h1>PROFIL</h1></u></strong></center>
-                <!--  exemple pour simuler la page -->
-                <p> hello</p>
-                <p> hello</p>
-                <p> hello</p>
-                <p> hello</p>
-                <p> hello</p>
-                <p> hello</p>
-            </section>
+              {% if message %}
+              <div class="message">
+                    <p>{{ message }}</p>
+              </div>
+              {% endif %}
+                <h3>Mes Informations</h3>
+                <form action="/profil/update" method="post">
+                <label>Nom d'utilisateur : </label>
+                <input type="text" name="username" value="{{ user.username }}" placeholder="Votre nom d'utilisateur" title="Saisissez votre nom d'utilisateur" required><br>
+
+                <label>Email :</label>
+                <input type="email" name="email" value="{{ user.email }}" placeholder="Votre adresse email" title="Saisissez votre email" required><br>
+
+                <label>Nouveau mot de passe :</label>
+                <input type="password" name="password" placeholder="Laisser vide pour ne pas changer"><br>
+
+
+                <button type="submit">Mettre à jour</button>
+                </form>
+              <h3>Mes Offres</h3>
+              {% if produits %}
+                <ul>
+                  {%for produit in produits%}
+                  <li>
+                    <strong>{{produit.name_item}}</strong> - {{produit.price_item}} €
+                    
+                    <form action="/offre/supprimer/{{ produit.id_item }}" method="post" style="display:inline;">
+                       <button type="submit">Supprimer</button>
+                    </form>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p>Vous n'avez pas encore posté d'offres.</p>
+            {% endif %}
+          </section>
+
             <section class="bas_de_page">
               <figure class="image_bas_de_page">
                 <div class="reassurance__img">
