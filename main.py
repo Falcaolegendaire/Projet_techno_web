@@ -15,12 +15,16 @@ from security import get_password_hash, verify_password, ALGORITHM, SECRET_KEY
 from fastapi.responses import JSONResponse
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
+from starlette.middleware.sessions import SessionMiddleware # gestion des sessions 
+import secrets # module pour definir une clé secrete pour le middleware
+
 app=FastAPI()
 
 # ceci monte les fichiers statiques pour les images et les fichiers css
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates=Jinja2Templates(directory="templates")
 
+key=secrets.token_hex(32)
 # autoriser les requetes et l'utilisation des methodes 
 app.add_middleware(
     CORSMiddleware,
@@ -28,6 +32,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+#creation du middleware pour la gestion des sessions
+app.add_middleware(SessionMiddleware,secret_key=key)
+
 # fonction de creation de la basse de donnée
 def create_data_base():
     SQLModel.metadata.create_all(connection)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
@@ -70,10 +77,10 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
         if not user or not verify_password(password, user.hashed_password):
           return RedirectResponse(url="/", status_code=303)
         
-        global current_user_id, name_current_user,email_cuurent_user
-        current_user_id= user.id_utilisateur
-        name_current_user= user.username
-        email_cuurent_user=user.email
+               # gestion des sessions pour que chaque user ai sa propre session independante
+        request.session["user_id"]= user.id_utilisateur
+        request.session["user_name"]= user.username
+        request.session["user_email"]=user.email
 
         access_token = create_access_token(data={"sub": str(user.id_utilisateur)})
         response = RedirectResponse(url="/acceuil.html", status_code=303)
@@ -114,6 +121,7 @@ async def page_connexion( request:Request):
 
 @app.get("/acceuil.html",response_class=HTMLResponse)
 async def home( request:Request):
+    name_current_user=request.session.get("user_name")
 
     return templates.TemplateResponse("acceuil.html", {"request":request, "utilisateur":name_current_user})
 #____________________
@@ -242,6 +250,8 @@ async def supprimer_offre(id_item: int, request: Request):
 async def search( request:Request, recherche: str = Query(...)):
     """test pour la recherche"""    
     with Session(connection) as cursor:
+        current_user_id=request.session.get("user_id")
+
         statement = select(Produit, Utilisateur).join(Utilisateur, Produit.id_utilisateur == Utilisateur.id_utilisateur).\
                         where(Produit.name_item.ilike(f"%{recherche}%"))
         results = cursor.exec(statement).all()
@@ -327,6 +337,8 @@ async def afficher_panier(request: Request):
 #ajouter au panier
 @app.post("/panier/ajouter", response_class=RedirectResponse)
 async def ajouter_au_panier(request: Request, produit_id: int = Form(...), quantite: int = Form(default=1)):
+        # recupere la valeur de l'id du user courant que l'on a ajouter plus haut dans le dictionnaire request.session
+    current_user_id=request.session.get("user_id")
 
     with Session(connection) as session:
         # Vérifie si l'article est déjà dans le panier
@@ -348,6 +360,7 @@ async def ajouter_au_panier(request: Request, produit_id: int = Form(...), quant
 @app.post("/panier/supprimer/{id_item}")
 async def supprimer_du_panier(id_item: int, request: Request):
     temp=0
+    current_user_id=request.session.get("user_id")
 
     with Session(connection) as session:
         stmt = select(Panier).where(Panier.id_current_user == current_user_id, Panier.id_item == id_item)
@@ -424,6 +437,8 @@ async def add_item( request:Request,
 # -----
 def fill_table_produit(name:str,description:str,price:float,quantity:int,image:Optional[str]=None,category:str="autres"):
     """ fonction pour remplir la table produit"""""
+    current_user_id=request.session.get("user_id")
+
     with Session(connection) as session:
         session.add(Produit(name_item=name,
                             description=description,
@@ -445,6 +460,9 @@ async def mail_to_seller(request:Request,
                   message:str=Form(...),
                   nom_vendeur:str=Form(...),
                   id_vendeur:int=Form(...)):
+        name_current_user=request.session.get("user_name")
+        email_cuurent_user=request.session.get("user_email")
+
         notification=f"Bonjour Monsieur/Madame {nom_vendeur},\n Vous avez recu un message de la part de {name_current_user} pour votre article <<{produit}>>.\n\n Voici le message:  <<{message}>>  Vous pouvez repondre à ce message en repondant à l'email suivant:{email_cuurent_user} \n\n Cordialement,\n\n L'équipe de StudentTrade."
         with Session(connection) as session:
             session.add(NOtification(id_utilisateur=id_vendeur,message=notification))
@@ -453,6 +471,8 @@ async def mail_to_seller(request:Request,
 
 @app.get("/notification.html",response_class=HTMLResponse)
 async def notification( request:Request):
+    current_user_id=request.session.get("user_id")
+
     with Session(connection) as cursor:
         query=select(NOtification).where(NOtification.id_utilisateur==current_user_id)
         notification=cursor.exec(query).all()
