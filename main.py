@@ -354,7 +354,7 @@ async def afficher_panier(request: Request):
     current_user_id=user.id_utilisateur
     with Session(connection) as session:
         stmt = select(Panier, Produit, Utilisateur).join(Produit, Produit.id_item == Panier.id_item).\
-                        join(Utilisateur, Utilisateur.id_utilisateur == Produit.id_utilisateur).where(Panier.id_current_user == current_user_id)
+                        join(Utilisateur, Utilisateur.id_utilisateur == Produit.id_utilisateur).where(Panier.id_current_user == current_user_id,Produit.quantity_item)
         resultats = session.exec(stmt).all()
 
         panier_items = []
