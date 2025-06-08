@@ -359,15 +359,16 @@ async def ajouter_au_panier(request: Request, produit_id: int = Form(...), quant
 
 @app.post("/panier/supprimer/{id_item}")
 async def supprimer_du_panier(id_item: int, request: Request):
-    temp=0
+    temps=0
+
     current_user_id=request.session.get("user_id")
 
     with Session(connection) as session:
         stmt = select(Panier).where(Panier.id_current_user == current_user_id, Panier.id_item == id_item)
         item = session.exec(stmt).first()
 
-        temp = item.quantite
-        item.quantite = temp - 1
+        temps = item.quantite
+        item.quantite = temps - 1
         
         if item:
             session.add(item)
